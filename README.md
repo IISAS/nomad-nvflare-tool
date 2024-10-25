@@ -11,7 +11,7 @@
 Copy [`papi.json.template`](papi.json.template) as `papi.json` and adjust the connection settings.
 
 ### Nomad Job
-Copy [`job.json.template`](job.json.template) as `job.json` and adjust it. Set the `password` for the NVFLARE Dashboard project admin and `jupyter_password` for the JupyterLab service running in the NVFLARE Dashboard container.
+Copy [`job.json.template`](job.json.template) as `job.json` and adjust it. Set the `password` for the NVFLARE Dashboard project admin and `jupyter_password` for the JupyterLab service running in the NVFLARE FL Server container.
 
 ### FL scenario
 Copy the [`scenario.json.template`](scenario.json.template) as `scenario.json` and configure. This is the main configuration file for defining the FL scenario; i.e., organizations and their client sites within the federation.

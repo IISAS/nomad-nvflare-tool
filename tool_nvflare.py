@@ -672,6 +672,9 @@ def main(args):
     if args.subcommand == 'scenario':
         job_ID = args.jobid
         nvfl_dashboard_endpoint = papi.get_job_endpoints(job_ID)['dashboard']
+        logging.info(f'NVFLARE Dashboard: {nvfl_dashboard_endpoint}')
+        nvfl_server_jupyter_endpoint = papi.get_job_endpoints(job_ID)['server-jupyter']
+        logging.info(f'NVFLARE FL Server JupyterLab: {nvfl_server_jupyter_endpoint}')
         nvfl_project_admin = init_nvfl_dashboard_client(
             endpoint=nvfl_dashboard_endpoint,
             username=cfg_job['dashboard']['username'],
