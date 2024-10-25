@@ -2,7 +2,7 @@
 
 ## Prerequisities
 1. Docker (for deploying clients locally)
-2. PAPI (for deploying NVFLARE Dashboard and FL server in Nomad cluster)
+2. [PAPI - nvflare branch](https://github.com/ai4os/ai4-papi/tree/nvflare) (for deploying NVFLARE Dashboard and FL server in Nomad cluster)
 3. Python 3.10
 
 ## Configuration
