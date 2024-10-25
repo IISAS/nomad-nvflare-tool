@@ -2,7 +2,7 @@
 
 ## Prerequisities
 1. Docker (for deploying clients locally)
-2. [oidc-agent] (https://github.com/indigo-dc/oidc-agent)
+2. [oidc-agent](https://github.com/indigo-dc/oidc-agent)
 3. [PAPI - nvflare branch](https://github.com/ai4os/ai4-papi/tree/nvflare) (for deploying NVFLARE Dashboard and FL server in Nomad cluster)
 4. Python 3.10
 
