@@ -1,8 +1,8 @@
 # ai4os-nvflare-test
 
 ## Prerequisities
-1. docker
-2. PAPI
+1. Docker (for deploying clients locally)
+2. PAPI (for deploying NVFLARE Dashboard and FL server in Nomad cluster)
 3. Python 3.10
 
 ## Configuration
