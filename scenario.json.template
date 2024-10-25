@@ -1,0 +1,100 @@
+{
+  "organizations": {
+    "org1": {
+      "override": {
+        "user": {
+          "password": "####PASSWORD_COMMON_FOR_ALL_USERS_IN_ORG####",
+          "organization": "{organization}"
+        },
+        "client": {
+          "organization": "{organization}",
+          "capacity": {
+            "num_of_gpus": 0,
+            "mem_per_gpu_in_GiB": 0
+          }
+        }
+      },
+      "users": [
+        {
+          "email": "admin@{organization}.eu",
+          "name": "admin",
+          "role": "org_admin"
+        }
+      ],
+      "clients": [
+        {
+          "name": "{organization}-site-1"
+        },
+        {
+          "name": "{organization}-site-2"
+        },
+        {
+          "name": "{organization}-site-3"
+        },
+        {
+          "name": "{organization}-site-4"
+        },
+        {
+          "name": "{organization}-site-5"
+        }
+      ]
+    },
+    "org2": {
+      "override": {
+        "user": {
+          "password": "####PASSWORD_COMMON_FOR_ALL_USERS_IN_ORG####",
+          "organization": "{organization}"
+        },
+        "client": {
+          "organization": "{organization}",
+          "capacity": {
+            "num_of_gpus": 0,
+            "mem_per_gpu_in_GiB": 0
+          }
+        }
+      },
+      "users": [
+        {
+          "email": "admin@{organization}.eu",
+          "name": "admin",
+          "role": "org_admin"
+        }
+      ],
+      "clients": [
+        {
+          "name": "{organization}-site-1"
+        },
+        {
+          "name": "{organization}-site-2"
+        }
+      ]
+    },
+    "org3": {
+      "override": {
+        "user": {
+          "password": "####PASSWORD_COMMON_FOR_ALL_USERS_IN_ORG####",
+          "organization": "{organization}"
+        },
+        "client": {
+          "organization": "{organization}",
+          "capacity": {
+            "num_of_gpus": 0,
+            "mem_per_gpu_in_GiB": 0
+          }
+        }
+      },
+      "users": [
+        {
+          "email": "admin@{organization}.eu",
+          "name": "admin",
+          "role": "org_admin"
+        }
+      ],
+      "clients": [
+        {
+          "name": "{organization}-site-1"
+        }
+      ]
+    }
+  }
+}

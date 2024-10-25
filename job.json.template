@@ -1,0 +1,16 @@
+{
+  "dashboard": {
+    "username": "admin",
+    "password": "####YOUR_NVFLARE_PROJECT_ADMIN_PASSWORD####",
+    "project_short_name": "nvflare-test-01",
+    "project_title": "NVFLARE Test 01",
+    "project_description": "deployment for testing",
+    "project_starting_date": "2024-10-07",
+    "project_end_date": "",
+    "project_public": true,
+    "project_frozen": true
+  },
+  "server": {
+    "jupyter_password": "####YOUR_JUPYTER_LAB_PASSWORD####"
+  }
+}

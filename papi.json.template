@@ -1,0 +1,6 @@
+  {
+    "host": "http://127.0.0.1:8000",
+    "oidc_account": "egi-checkin",
+    "tool_name": "ai4os-nvflare",
+    "vo": "vo.ai4eosc.eu"
+  }
