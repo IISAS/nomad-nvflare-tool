@@ -63,7 +63,7 @@ This will deploy and start NVFLARE Dashboard and NVFLARE server autmatically via
 
 ### 2. Deploy Scenario
 ```commandline
-./tool_nvflare.py scenario --cfg-papi papi.json --cfg-job job.json --jobid ${JOB_ID} --init --download --start
+./tool_nvflare.py --cfg-papi papi.json --cfg-job job.json scenario --jobid ${JOB_ID} --init --download --start
 ```
 This will setup all the organizations, users, and clients in the NVFLARE Dashboard, download NVFLARE console as well all the client startup scripts, and execute clients via Docker.
 
