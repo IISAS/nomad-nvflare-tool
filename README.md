@@ -57,13 +57,13 @@ Use the `"organizations": { "orgX": {"override": { "user": USER}, "client": CLIE
 
 ### 1. Start Nomad job
 ```commandline
-./tool-nvflare.py --cfg-papi papi.json --cfg-job job.json job --start
+./tool_nvflare.py --cfg-papi papi.json --cfg-job job.json job --start
 ```
 This will deploy and start NVFLARE Dashboard and NVFLARE server autmatically via PAPI and the corresponding Nomad job ID will be returned on success. Copy the id and use it in following commands.
 
 ### 2. Deploy Scenario
 ```commandline
-./tool-nvflare.py scenario --cfg-papi papi.json --cfg-job job.json --jobid ${JOB_ID} --init --download --start
+./tool_nvflare.py scenario --cfg-papi papi.json --cfg-job job.json --jobid ${JOB_ID} --init --download --start
 ```
 This will setup all the organizations, users, and clients in the NVFLARE Dashboard, download NVFLARE console as well all the client startup scripts, and execute clients via Docker.
 
