@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 import sys
 import logging
 import tempfile
@@ -20,7 +21,6 @@ import os
 import requests
 import subprocess
 import time
-import zipfile
 
 
 def load_config(file: str) -> dict:
@@ -598,7 +598,7 @@ def do_scenario_init(nvfl_project_admin, cfg_scenario):
     return orgs
 
 def unzip_file(file: str, dir: str, pin: str):
-    commands = [f'unzip -x -P {pin} {file} -d {dir}']
+    commands = [f'unzip -x -o -P {pin} {file} -d {dir}']
     processes = [subprocess.Popen(cmd, shell=True) for cmd in commands]
     # following code does not preserve file permissions
     # with zipfile.ZipFile(file, 'r') as zip_ref:
@@ -606,12 +606,14 @@ def unzip_file(file: str, dir: str, pin: str):
     #     zip_ref.extractall(dir, pwd=bytes(pin, 'utf-8'))
 
 
-def do_download_nvflare_scripts(project_admin, cfg_scenario, working_dir: str = '.', download_dir: str = 'downloads', extract_dir: str = '.', extract=False):
+def do_download_nvflare_scripts(project_admin, cfg_scenario, working_dir: str = os.path.curdir, download_dir: str = 'downloads', extract_dir: str = os.path.curdir, extract=False):
     pin = '1234'
     if not os.path.isabs(extract_dir):
         extract_dir = os.path.join(working_dir, extract_dir)
+        extract_dir = os.path.normpath(extract_dir)
     if not os.path.isabs(download_dir):
         download_dir = os.path.join(working_dir, download_dir)
+        download_dir = os.path.normpath(download_dir)
     os.makedirs(download_dir, exist_ok=True)
     zip_flare_console = project_admin.download_flare_console(pin=pin, dir=download_dir)
     logger.info(f'downloaded flare console: {zip_flare_console}')
@@ -630,30 +632,37 @@ def do_download_nvflare_scripts(project_admin, cfg_scenario, working_dir: str = 
                 unzip_file(zip_client_startup_script, dir=os.path.join(extract_dir, org), pin=pin)
 
 
-def start_client(client, working_dir, clients_dir, data_dir):
+def start_client(client, working_dir, clients_dir, data_dir, client_name_prefix: str = ''):
+    if not os.path.isabs(working_dir):
+        working_dir = os.path.abspath(working_dir)
     if not os.path.isabs(data_dir):
         data_dir = os.path.join(working_dir, data_dir)
+        data_dir = os.path.normpath(data_dir)
     if not os.path.isabs(clients_dir):
         clients_dir = os.path.join(working_dir, clients_dir)
+        clients_dir = os.path.normpath(clients_dir)
     my_data_dir = os.path.join(data_dir, client['organization'], client['name'])
     os.makedirs(my_data_dir, exist_ok=True)
     client_dir = os.path.join(clients_dir, client['organization'], client['name'])
     client_startup_dir = os.path.join(client_dir, 'startup')
     logger.info('starting client %s with docker ...' % client['name'])
+    client_name_prefix = client_name_prefix.strip()
     commands = [
+        rf"sed -i -E 's/(docker\s+run\s+[^\n]+?--name)=({re.escape(client['name'])})/\1={client_name_prefix + '_' if len(client_name_prefix) > 0 else ''}\2/g' {client_dir}/startup/docker.sh",
         f'export MY_DATA_DIR={my_data_dir}; cd {working_dir}; mkdir -p $MY_DATA_DIR; cd {client_startup_dir}; ./docker.sh -d'
     ]
     processes = [subprocess.Popen(cmd, shell=True) for cmd in commands]
 
 
-def do_start_clients(cfg_scenario, nvfl_dashboard_endpoint, working_dir: str = '.', clients_dir: str = '.', data_dir: str = 'data'):
+def do_start_clients(cfg_scenario, nvfl_dashboard_endpoint, working_dir: str = os.path.curdir, clients_dir: str = os.path.curdir, data_dir: str = 'data', client_name_prefix: str = ''):
     for org, org_cfg in cfg_scenario['organizations'].items():
         users_cfg = expand_vars_and_override(org_cfg['users'], org_cfg['override']['user'], {'{organization}': org})
         org_admin_cfg = get_org_admin(users_cfg)
         org_admin = NVFLDashboardClient(nvfl_dashboard_endpoint, org_admin_cfg['email'], org_admin_cfg['password'])
         clients = org_admin.get_clients(org=org)
         for client in clients:
-            start_client(client, working_dir, clients_dir, data_dir)
+            start_client(client, working_dir, clients_dir, data_dir, client_name_prefix=client_name_prefix)
+
 
 def main(args):
     logger.setLevel(args.log_level)
@@ -663,14 +672,24 @@ def main(args):
 
     papi = PAPIClient(**cfg_papi)
 
+    dir_jobs = os.environ.get('NVFL_JOBS_DIR', os.path.join(os.path.curdir, 'jobs'))
+    os.makedirs(dir_jobs, exist_ok=True)
+
+    def get_job_dir(job_ID):
+        return os.path.join(dir_jobs, job_ID)
+
     if args.subcommand == 'job':
         if args.start:
             job_ID = papi.deploy_tool_nvflare(**cfg_job)
             logger.debug(f'job_ID: {job_ID}')
             print(job_ID, file=sys.stdout, flush=True)
+            os.makedirs(get_job_dir(job_ID))
 
     if args.subcommand == 'scenario':
-        job_ID = args.jobid
+        job_ID = os.environ.get('NVFL_JOBID', args.jobid)
+        if not job_ID:
+            print('--jobid argument or NVFL_JOBID env var is required', file=sys.stderr, flush=True)
+            sys.exit(1)
         nvfl_dashboard_endpoint = papi.get_job_endpoints(job_ID)['dashboard']
         logging.info(f'NVFLARE Dashboard: {nvfl_dashboard_endpoint}')
         nvfl_server_jupyter_endpoint = papi.get_job_endpoints(job_ID)['server-jupyter']
@@ -685,9 +704,9 @@ def main(args):
             orgs = do_scenario_init(nvfl_project_admin, cfg_scenario)
             logger.debug('scenario:\n%s' % json.dumps(orgs, indent=2))
         if args.download:
-            do_download_nvflare_scripts(nvfl_project_admin, cfg_scenario, extract=True)
+            do_download_nvflare_scripts(nvfl_project_admin, cfg_scenario, working_dir=get_job_dir(job_ID), extract=True)
         if args.start:
-            do_start_clients(cfg_scenario, nvfl_dashboard_endpoint)
+            do_start_clients(cfg_scenario, nvfl_dashboard_endpoint, working_dir=get_job_dir(job_ID), client_name_prefix=job_ID)
 
 
 
@@ -712,7 +731,7 @@ if __name__ == "__main__":
     job_parser.add_argument('--start', action='store_true')
 
     scenario_parser = subparsers.add_parser('scenario')
-    scenario_parser.add_argument('--jobid', action='store', type=str, required=True, help='Nomad job ID')
+    scenario_parser.add_argument('--jobid', action='store', type=str, default=None, help='Nomad job ID')
     scenario_parser.add_argument('--cfg', action='store', type=str, default='scenario.json', help='scenario configuration file')
 
     g = scenario_parser.add_argument_group()
