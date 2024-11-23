@@ -686,7 +686,10 @@ def main(args):
             os.makedirs(get_job_dir(job_ID))
 
     if args.subcommand == 'scenario':
+        logger.debug(f'args.jobid: {args.jobid}')
+        logger.debug('os.environ[\'NVFL_JOBID\']: %s', os.environ.get('NVFL_JOBID', None))
         job_ID = os.environ.get('NVFL_JOBID', args.jobid)
+        logger.debug(f'job_ID: {job_ID}')
         if not job_ID:
             print('--jobid argument or NVFL_JOBID env var is required', file=sys.stderr, flush=True)
             sys.exit(1)
