@@ -53,23 +53,42 @@ Clients of particular organizations can be defined in `"organizations": {"orgX":
 #### Override conf values
 Use the `"organizations": { "orgX": {"override": { "user": USER}, "client": CLIENT}` to override and set common parameters within an organization. Placeholder `{organization}` can be used in values as well here.
 
+### .env file
+An `.env` file can be used to specify some variables; e.g.:  
+```text
+export NVFL_JOBS_DIR='./jobs'
+export NVFL_JOBID='1e4f461e-ab2d-11ef-884b-5b88271cde9f'
+```
+- `NVFL_JOBS_DIR`  - specify working directory for deployed Nomad jobs. In this directory, each Nomad job will have its own directory named by its job UUID. Default value: `./jobs`
+- `NVFL_JOBID` - specify active Nomad job to work with, when operating with a scenario
+
 ## Deploying
 
 ### 1. Start Nomad job
+**a)** The following command will deploy and start NVFLARE Dashboard and NVFLARE server autmatically via PAPI and the corresponding Nomad job ID, and URL to the NVFL Dashboard will be returned on success. Copy the job id from the console output and use it in following commands.
 ```commandline
 ./tool_nvflare.py --cfg-papi papi.json --cfg-job job.json job --start
 ```
-This will deploy and start NVFLARE Dashboard and NVFLARE server autmatically via PAPI and the corresponding Nomad job ID will be returned on success. Copy the id and use it in following commands.
+**b)** A simplified command (assuming that `papi.json` and `job.json` exist):
+```commandline
+./tool_nvflare.py job --start
+```
 
 ### 2. Deploy Scenario
+**a)** The following command will setup all the organizations, users, and clients in the NVFLARE Dashboard, download NVFLARE console as well all the client startup scripts, and execute clients via Docker.
 ```commandline
-./tool_nvflare.py --cfg-papi papi.json --cfg-job job.json scenario --jobid ${JOB_ID} --init --download --start
+./tool_nvflare.py --cfg-papi papi.json --cfg-job job.json scenario --jobid [JOBID] --init --download --start
 ```
-This will setup all the organizations, users, and clients in the NVFLARE Dashboard, download NVFLARE console as well all the client startup scripts, and execute clients via Docker.
+
+**b)** Another option is to create an `.env` file with `NVFL_JOBID` variable specified in it, source the `.env` file and deploy the scenario with the following command (assuming that `papi.json` and `job.json` exist):
+```commandline
+source .env
+./tool_nvflare.py scenario --init --download --start
+```
 
 ## Accessing NVFLARE FL admin console
 ```commandline
-cd ./admin/startup
+cd ./jobs/[JOBID]/admin/startup
 ./fl_admin.sh
 ```
 
@@ -136,7 +155,7 @@ We will use an official NVFLARE [hello-world-sag](https://github.com/NVIDIA/NVFl
 #### Prepare the job
 Copy the [`./fl_apps/hello-numpy-sag/`](./fl_apps/hello-numpy-sag/) into extracted NVFLARE console transfer folder [`./admin/transfer/`](./admin/transfer/) and adjust its configuration to your needs:
 ```commandline
-cp -r ./fl_apps/hello-numpy-sag/ ./admin/
+cp -r ./fl_apps/hello-numpy-sag/ ./admin/transfer/
 ```
 
 #### Submit the job
@@ -212,7 +231,7 @@ Done [182111 usecs] 2024-10-25 12:13:03.511191
 
 #### Other job outputs
 ```commandline
-ls -al ./org1/org1-site-1/e932cf0d-3908-4b2c-96f0-2ffdb9708de5/model
+ls -al ./jobs/[JOBID]/org1/org1-site-1/e932cf0d-3908-4b2c-96f0-2ffdb9708de5/model
 total 12
 drwxr-xr-x 2 stevo stevo 4096 okt 25 12:10 .
 drwxr-xr-x 4 stevo stevo 4096 okt 25 12:11 ..

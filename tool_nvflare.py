@@ -169,6 +169,7 @@ class PAPIClient:
                 "nvfl_dashboard_project_short_name": "",
                 "nvfl_dashboard_project_title": "",
                 "nvfl_dashboard_project_description": "",
+                "nvfl_dashboard_project_app_location": "",
                 "nvfl_dashboard_project_starting_date": "",
                 "nvfl_dashboard_project_end_date": "",
                 "nvfl_dashboard_project_public": False,
@@ -684,7 +685,9 @@ def main(args):
             logger.debug(f'job_ID: {job_ID}')
             print(job_ID, file=sys.stdout, flush=True)
             os.makedirs(get_job_dir(job_ID))
-
+            nvfl_dashboard_endpoint = papi.get_job_endpoints(job_ID)['dashboard']
+            logging.info(f'NVFLARE Dashboard: {nvfl_dashboard_endpoint}')
+ 
     if args.subcommand == 'scenario':
         logger.debug(f'args.jobid: {args.jobid}')
         logger.debug('os.environ[\'NVFL_JOBID\']: %s', os.environ.get('NVFL_JOBID', None))
