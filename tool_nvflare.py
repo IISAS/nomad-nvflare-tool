@@ -607,7 +607,7 @@ def unzip_file(file: str, dir: str, pin: str):
     #     zip_ref.extractall(dir, pwd=bytes(pin, 'utf-8'))
 
 
-def do_download_nvflare_scripts(project_admin, cfg_scenario, working_dir: str = os.path.curdir, download_dir: str = 'downloads', extract_dir: str = os.path.curdir, extract=False):
+def do_download_nvflare_scripts(project_admin, cfg_scenario, working_dir: str = os.path.curdir, download_dir: str = 'downloads', extract_dir: str = os.path.curdir, extract=True):
     pin = '1234'
     if not os.path.isabs(extract_dir):
         extract_dir = os.path.join(working_dir, extract_dir)
@@ -648,11 +648,9 @@ def start_client(client, working_dir, clients_dir, data_dir, client_name_prefix:
     client_startup_dir = os.path.join(client_dir, 'startup')
     logger.info('starting client %s with docker ...' % client['name'])
     client_name_prefix = client_name_prefix.strip()
-    commands = [
-        rf"sed -i -E 's/(docker\s+run\s+[^\n]+?--name)=({re.escape(client['name'])})/\1={client_name_prefix + '_' if len(client_name_prefix) > 0 else ''}\2/g' {client_dir}/startup/docker.sh",
+    cmd = rf"sed -i -E 's/(docker\s+run\s+[^\n]+?--name)=({re.escape(client['name'])})/\1={client_name_prefix + '_' if len(client_name_prefix) > 0 else ''}\2/g' {client_dir}/startup/docker.sh && " + \
         f'export MY_DATA_DIR={my_data_dir}; cd {working_dir}; mkdir -p $MY_DATA_DIR; cd {client_startup_dir}; ./docker.sh -d'
-    ]
-    processes = [subprocess.Popen(cmd, shell=True) for cmd in commands]
+    process = subprocess.Popen(cmd, shell=True)
 
 
 def do_start_clients(cfg_scenario, nvfl_dashboard_endpoint, working_dir: str = os.path.curdir, clients_dir: str = os.path.curdir, data_dir: str = 'data', client_name_prefix: str = ''):
