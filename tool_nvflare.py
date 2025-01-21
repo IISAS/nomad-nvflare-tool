@@ -688,8 +688,8 @@ def main(args):
  
     if args.subcommand == 'scenario':
         logger.debug(f'args.jobid: {args.jobid}')
-        logger.debug('os.environ[\'NVFL_JOBID\']: %s', os.environ.get('NVFL_JOBID', None))
-        job_ID = os.environ.get('NVFL_JOBID', args.jobid)
+        logger.debug('os.getenv(\'NVFL_JOBID\'): %s', os.getenv('NVFL_JOBID'))
+        job_ID = args.jobid
         logger.debug(f'job_ID: {job_ID}')
         if not job_ID:
             print('--jobid argument or NVFL_JOBID env var is required', file=sys.stderr, flush=True)
@@ -735,7 +735,7 @@ if __name__ == "__main__":
     job_parser.add_argument('--start', action='store_true')
 
     scenario_parser = subparsers.add_parser('scenario')
-    scenario_parser.add_argument('--jobid', action='store', type=str, default=None, help='Nomad job ID')
+    scenario_parser.add_argument('--jobid', action='store', type=str, default=os.getenv('NVFL_JOBID', None), help='Nomad job ID')
     scenario_parser.add_argument('--cfg', action='store', type=str, default='scenario.json', help='scenario configuration file')
 
     g = scenario_parser.add_argument_group()
