@@ -1,4 +1,4 @@
-# ai4os-nvflare-test
+# nomad-nvflare-tool
 
 ## Prerequisities
 1. Docker (for deploying clients locally)
