@@ -3,7 +3,7 @@
 ## Prerequisities
 1. Docker (for deploying clients locally)
 2. [oidc-agent](https://github.com/indigo-dc/oidc-agent) (follow the [guide](https://github.com/ai4os/ai4-papi/tree/nvflare?tab=readme-ov-file#generate-a-token-via-the-terminal) on generating token via the terminal)
-3. [PAPI - nvflare branch](https://github.com/ai4os/ai4-papi/tree/nvflare) (for deploying NVFLARE Dashboard and FL server in Nomad cluster)
+3. [PAPI](https://github.com/ai4os/ai4-papi) (for deploying NVFLARE Dashboard and FL server in Nomad cluster)
 4. Python 3.10
 
 ## Configuration
