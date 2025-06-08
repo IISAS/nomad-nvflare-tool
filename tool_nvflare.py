@@ -216,7 +216,6 @@ class PAPIClient:
             del data[subconf][k]
         for subconf in to_del_subconf:
           del data[subconf]
-        print(data)
         logger.debug(f'data:\n{json.dumps(data, indent=2)}')
 
         r = self.post(
