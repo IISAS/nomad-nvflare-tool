@@ -162,18 +162,11 @@ class PAPIClient:
         logger.debug(f'params:\n{json.dumps(params, indent=2)}')
 
         data={
-            "general": {
-                "nvfl_server_jupyter_password": "",
-                "nvfl_dashboard_username": "",
-                "nvfl_dashboard_password": "",
-                "nvfl_dashboard_project_short_name": "",
-                "nvfl_dashboard_project_title": "",
-                "nvfl_dashboard_project_description": "",
-                "nvfl_dashboard_project_app_location": "",
-                "nvfl_dashboard_project_starting_date": "",
-                "nvfl_dashboard_project_end_date": "",
-                "nvfl_dashboard_project_public": False,
-                "nvfl_dashboard_project_frozen": False
+            "nvflare": {
+                "username": "",
+                "password": "",
+                "app_location": "",
+                "public_project": False
             },
             "storage": {
                 "rclone_user": "",
@@ -184,7 +177,44 @@ class PAPIClient:
         for subconf in ['dashboard', 'server']:
             cfg_dashboard=cfg[subconf]
             for k,v in cfg_dashboard.items():
-                data['general']['nvfl_%s_%s' % (subconf,k)]=v
+                data['nvflare']['nvfl_%s_%s' % (subconf,k)]=v
+        # cfg mapping; since NVFLARE integration in PAPI
+        kvmap = {
+          'nvflare': {
+            'nvfl_dashboard_username': ('nvflare', 'username'),
+            'nvfl_dashboard_password': ('nvflare', 'password'),
+            'nvfl_dashboard_project_app_location': ('nvflare', 'app_location'),
+            'nvfl_dashboard_project_description': ('general', 'desc'),
+            'nvfl_dashboard_project_frozen': None,
+            'nvfl_dashboard_project_public': ('nvflare', 'public_project'),
+            'nvfl_dashboard_project_short_name': None,
+            'nvfl_dashboard_project_title': ('general', 'title'),
+            'nvfl_server_jupyter_password': None
+          },
+          'storage': None
+        }
+        to_del_subconf = []
+        for subconf in kvmap.keys():
+          if kvmap[subconf] == None:
+            to_del_subconf.append(subconf)
+            continue
+          to_del = []
+          for k,v in data[subconf].items():
+            if k in kvmap[subconf].keys():
+              if kvmap[subconf][k] == None:
+                to_del.append(k)
+                continue
+              subconf_dst = kvmap[subconf][k][0]
+              logger.debug(f'subconf_dst={subconf_dst}')
+              if subconf_dst not in data.keys():
+                data[subconf_dst] = {}
+              data[subconf_dst][kvmap[subconf][k][1]] = data[subconf][k]
+              to_del.append(k)
+          for k in to_del:
+            del data[subconf][k]
+        for subconf in to_del_subconf:
+          del data[subconf]
+        print(data)
         logger.debug(f'data:\n{json.dumps(data, indent=2)}')
 
         r = self.post(
@@ -220,7 +250,7 @@ class NVFLDashboardClient:
             password: str | None = None,
             **kwargs
     ):
-        self.__base_url = base_url
+        self.__base_url = base_url.rstrip('/') + '/'
         if username and password:
             self.__username = username
             self.__password = password
@@ -243,7 +273,7 @@ class NVFLDashboardClient:
             access_token: str | None = None,
             params: dict | None = {}
     ):
-        url = urljoin(self.__base_url, path)
+        url = urljoin(self.get_base_url(), path.lstrip('/'))
         headers = {
             'Content-type': 'application/json'
         }
@@ -263,7 +293,7 @@ class NVFLDashboardClient:
             req: dict = {},
             **kwargs
     ):
-        url = urljoin(self.__base_url, path)
+        url = urljoin(self.get_base_url(), path.lstrip('/'))
         headers = {
             'Content-type': 'application/json'
         }
@@ -283,7 +313,7 @@ class NVFLDashboardClient:
             access_token: str | None = None,
             req: dict = {}
     ):
-        url = urljoin(self.__base_url, path)
+        url = urljoin(self.get_base_url(), path.lstrip('/'))
         headers = {
             'Content-type': 'application/json'
         }
@@ -479,12 +509,14 @@ class NVFLDashboardClient:
             data: dict | None = {},
             access_token: str | None = None,
     ):
-        url = urljoin(self.__base_url, path)
+        url = urljoin(self.get_base_url(), path.lstrip('/'))
+        logger.debug('url=%s' % url)
         headers = {
             'Content-type': 'application/json'
         }
         if access_token:
             headers.update({'Authorization': f'Bearer {access_token}'})
+        logger.debug('headers=%s' % str(headers))
         resp = requests.post(
             url=url,
             headers=headers,
@@ -513,7 +545,9 @@ class NVFLDashboardClient:
             filename: str | None = None,
     ):
         id = self.user['id']
+        logger.debug('id=%s' % id)
         path = f'/api/v1/users/{id}/blob'
+        logger.debug('path=%s' % path)
         filename = self.download_blob(
             path=path,
             dir=dir,
@@ -521,6 +555,7 @@ class NVFLDashboardClient:
             data={'pin': pin},
             access_token=self.get_access_token()
         )
+        logger.debug('filename=%s' % filename)
         return filename
 
     def download_client_startup_kit(
@@ -683,7 +718,7 @@ def main(args):
             logger.debug(f'job_ID: {job_ID}')
             print(job_ID, file=sys.stdout, flush=True)
             os.makedirs(get_job_dir(job_ID))
-            nvfl_dashboard_endpoint = papi.get_job_endpoints(job_ID)['dashboard']
+            nvfl_dashboard_endpoint = urljoin(papi.get_job_endpoints(job_ID)['dashboard'], str(args.nvflare_dashboard_namespace).lstrip('/'))
             logging.info(f'NVFLARE Dashboard: {nvfl_dashboard_endpoint}')
  
     if args.subcommand == 'scenario':
@@ -694,7 +729,7 @@ def main(args):
         if not job_ID:
             print('--jobid argument or NVFL_JOBID env var is required', file=sys.stderr, flush=True)
             sys.exit(1)
-        nvfl_dashboard_endpoint = papi.get_job_endpoints(job_ID)['dashboard']
+        nvfl_dashboard_endpoint = urljoin(papi.get_job_endpoints(job_ID)['dashboard'], str(args.nvflare_dashboard_namespace).lstrip('/'))
         logging.info(f'NVFLARE Dashboard: {nvfl_dashboard_endpoint}')
         nvfl_server_jupyter_endpoint = papi.get_job_endpoints(job_ID)['server-jupyter']
         logging.info(f'NVFLARE FL Server JupyterLab: {nvfl_server_jupyter_endpoint}')
@@ -733,10 +768,16 @@ if __name__ == "__main__":
 
     job_parser = subparsers.add_parser('job')
     job_parser.add_argument('--start', action='store_true')
+    job_parser.add_argument('--nvflare-dashboard-namespace', action='store', type=str,
+                                 default=os.getenv('NVFLARE_DASHBOARD_NAMESPACE', 'nvflare-dashboard'),
+                                 help='used since NVFLARE v2.6.0, where the namespace is set to `nvflare-dashboard`')
 
     scenario_parser = subparsers.add_parser('scenario')
     scenario_parser.add_argument('--jobid', action='store', type=str, default=os.getenv('NVFL_JOBID', None), help='Nomad job ID')
     scenario_parser.add_argument('--cfg', action='store', type=str, default='scenario.json', help='scenario configuration file')
+    scenario_parser.add_argument('--nvflare-dashboard-namespace', action='store', type=str,
+                   default=os.getenv('NVFLARE_DASHBOARD_NAMESPACE', 'nvflare-dashboard'),
+                   help='used since NVFLARE v2.6.0, where the namespace is set to `nvflare-dashboard`')
 
     g = scenario_parser.add_argument_group()
     g.add_argument('--init', action='store_true')
