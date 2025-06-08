@@ -188,6 +188,8 @@ class PAPIClient:
             'nvfl_dashboard_project_frozen': None,
             'nvfl_dashboard_project_public': ('nvflare', 'public_project'),
             'nvfl_dashboard_project_short_name': None,
+            'nvfl_dashboard_project_starting_date': ('nvflare', 'starting_date'),
+            'nvfl_dashboard_project_end_date': ('nvflare', 'end_date'),
             'nvfl_dashboard_project_title': ('general', 'title'),
             'nvfl_server_jupyter_password': None
           },
